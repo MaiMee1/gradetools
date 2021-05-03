@@ -1,49 +1,38 @@
+import abc
 import doctest
 import importlib
 import os
 import pathlib
 import pickle
-import re
 import subprocess
 import sys
-import time
 import typing
 
-import lab2
-import utils.models
-
-_unlocked_tests = pathlib.Path('assets/tests')
+import utils
 
 
-class HogProj:
+class OkProj:
+    unlocked_tests = pathlib.Path('')
+
     def __init__(self, student: utils.models.Student):
         self.student = student
-        self.hog_root = self.get_hog_root().relative_to(utils.BASE_DIR)  # relative path
+        self.proj_root = self.get_proj_root().relative_to(utils.BASE_DIR)  # relative path
         self.ok_history: typing.Optional[dict] = None
 
-        self.tests_dir = self.hog_root / 'tests'
-        self.original_tests = self.hog_root / '~original-tests'
+        self.tests_dir = self.proj_root / 'tests'
+        self.original_tests = self.proj_root / '~original-tests'
 
-    @property
-    def hog_py(self) -> pathlib.Path:
-        path = utils.BASE_DIR / self.hog_root / 'hog.py'
-        if not path.exists():
-            raise FileNotFoundError(f"cannot find 'hog.py' in student {self.student.firstname}")
-        return path
-
-    def get_hog_root(self) -> pathlib.Path:
+    @abc.abstractmethod
+    def get_proj_root(self) -> pathlib.Path:
         # absolute PATH
-        path = utils.BASE_DIR / f'assets/submissions/{self.student.firstname}/hog'
-        if not path.exists():
-            raise FileNotFoundError(f"hog root for {self.student.firstname} not found")
-        return path
+        raise NotImplementedError
 
     def unlock_tests(self):
         os.chdir(utils.BASE_DIR)
         if self.original_tests.exists():
             raise ValueError("Already unlocked!")
         subprocess.run(['wsl', 'mv', self.tests_dir.as_posix(), self.original_tests.as_posix()], check=True)
-        subprocess.run(['wsl', 'cp', '-r', _unlocked_tests.as_posix(), self.tests_dir.as_posix()], check=True)
+        subprocess.run(['wsl', 'cp', '-r', self.__class__.unlocked_tests.as_posix(), self.tests_dir.as_posix()], check=True)
 
     def restore_tests(self):
         os.chdir(utils.BASE_DIR)
@@ -102,7 +91,7 @@ class HogProj:
         return qs, total
 
     def open_ok_history(self) -> dict:
-        ok_history = utils.BASE_DIR / self.hog_root / '.ok_history'
+        ok_history = utils.BASE_DIR / self.proj_root / '.ok_history'
         if not ok_history.exists():
             raise FileNotFoundError(".ok_history not found")
         with ok_history.open('rb') as binfile:
@@ -114,12 +103,12 @@ class HogProj:
             return self.ok_history
 
     def chdir(self):
-        os.chdir(self.get_hog_root())
+        os.chdir(self.get_proj_root())
 
     def run_doctest(self) -> typing.Tuple[int, int]:
-        sys.path.append(self.hog_root.as_posix())
+        sys.path.append(self.proj_root.as_posix())
         mod = importlib.import_module('hog')
         importlib.reload(mod)
         fail, all = doctest.testmod(mod)
-        sys.path.remove(self.hog_root.as_posix())
+        sys.path.remove(self.proj_root.as_posix())
         return fail, all
