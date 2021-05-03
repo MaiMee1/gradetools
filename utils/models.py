@@ -40,3 +40,9 @@ class Student:
             return self._student_id == other._student_id
         except AttributeError:
             return False
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __str__(self):
+        return f'{self.id}_{self.firstname}'
