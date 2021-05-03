@@ -6,22 +6,34 @@ from typing import Union
 class Student:
     """
     Represents a KU student
+    # Firstname,Github,Name,ID,Email
+
     """
-    def __init__(self, student_id: Union[int, str], name_en: str, name_th: str):
+    def __init__(self, firstname_en: str, github: str, name_en: str, student_id: Union[int, str], email: str):
         self._student_id: str = str(student_id)
+        self._firstname_en: str = firstname_en
         self._name_en: str = name_en
-        self._name_th: str = name_th
+        self._github: str = github
+        self._email: str = email
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self._student_id
 
     @property
-    def name(self):
+    def firstname(self) -> str:
+        return self._firstname_en
+
+    @property
+    def name(self) -> str:
         return self._name_en
 
-    def __str__(self):
-        return f'{self.id}_{self.name}'
+    @property
+    def github(self) -> str:
+        return self._github
+
+    def __repr__(self):
+        return f'{self.id}_{self.firstname}'
 
     def __eq__(self, other: Student):
         try:
