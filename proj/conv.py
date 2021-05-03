@@ -1,33 +1,33 @@
 import subprocess
+import typing
 from typing import Iterable
 
-from proj.berkeley import OkProj
+from .berkeley import OkProj
 
 
-def print_commit_messages(projects: Iterable[OkProj]):
+def print_commit_messages(projects: Iterable[OkProj], file: typing.IO = None):
     for proj in projects:
         proj.chdir()
-        print(proj.student.firstname)
+        print('v'*10 + '  ' + proj.student.firstname + '  ' + 'v'*10, file=file)
+        print(file=file)
 
         # count commits in master
         # cps = subprocess.run(['git', 'rev-list', '--count', 'master'], capture_output=True)
-        # print(cps.stdout.decode())
+        # print(cps.stdout.decode(), file=file)
 
         # Show more info than rev-list
         cps = subprocess.run(['git', 'shortlog', 'master'], capture_output=True)
-        # file.write(cps.stdout)
-        # file.write(bytes('^'*10 + student.firstname + '^'*10 + '\n', encoding='utf-8'))
-        print(cps.stdout.decode())
+        print(cps.stdout.decode(), file=file)
 
 
-def print_ok_history(projects: Iterable[OkProj]):
+def print_ok_history(projects: Iterable[OkProj], file: typing.IO = None):
     for proj in projects:
         try:
             hist = proj.open_ok_history()
         except FileNotFoundError:
-            print(proj.student.firstname, 'N', '', '', sep=',')
+            print(proj.student.firstname, 'N', '', '', sep=',', file=file)
             continue
-        print(proj.student.firstname, 'Y', hist['all_attempts'], hist['question'][0].split(' ')[1] if len(hist['question']) > 0 else '', sep=',')
+        print(proj.student.firstname, 'Y', hist['all_attempts'], hist['question'][0].split(' ')[1] if len(hist['question']) > 0 else '', sep=',', file=file)
 
 
 def restore_all(projects: Iterable[OkProj]):

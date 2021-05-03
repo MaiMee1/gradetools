@@ -1,14 +1,15 @@
 import pathlib
 
-import prog.berkeley
 import utils.models
 
+from .berkeley import OkProj
 
-class HogProj(prog.berkeley.OkProj):
+
+class AntsProj(OkProj):
     unlocked_tests = pathlib.Path('assets/ants/tests')
 
     def __init__(self, student: utils.models.Student):
-        super(HogProj, self).__init__(student)
+        super(AntsProj, self).__init__(student)
 
     def get_proj_root(self) -> pathlib.Path:
         # absolute PATH

@@ -1,10 +1,11 @@
 import pathlib
 
-import prog.berkeley
 import utils.models
 
+from .berkeley import OkProj
 
-class HogProj(prog.berkeley.OkProj):
+
+class HogProj(OkProj):
     unlocked_tests = pathlib.Path('assets/hog/tests')
 
     def __init__(self, student: utils.models.Student):
