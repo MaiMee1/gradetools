@@ -46,18 +46,32 @@ def unlock_all(projects: Iterable[OkProj]):
             pass
 
 
-def run_ok(csvfile: str, projects: Iterable[OkProj]):
-    with open(csvfile, 'w') as file:
+def run_ok(csvfile: str, projects: Iterable[OkProj], qs: list[str]):
+    with open(csvfile, 'w', encoding='utf-8') as file:
         for proj in projects:
-            qs, score = proj.student.run_ok()
-            row = [proj.student.firstname, score]
-            ls = proj.student.count_locked()
-            for i in range(13):
-                row.append(qs[i]['score'])
-                row.append(qs[i]['passed'])
-                row.append(qs[i]['failed'])
-                row.append(ls[i][True])
-                row.append(ls[i][False])
+            row = []
+            scores = []
+            for q in qs:
+                try:
+                    qr = proj.run_ok_q(q)
+                    row.append(qr.score)
+                    row.append(qr.passed)
+                    row.append(qr.failed)
+                except AttributeError as e:
+                    ans = input('continue? (y/N)')
+                    if ans == 'N':
+                        raise
+                    # if e.args[0] != "'NoneType' object has no attribute 'group'":
+                    #     raise
+                    row.append('')
+                    row.append('')
+                    row.append('')
+                    qr = 0
+                lr = proj.count_locked_q(q)
+                row.append(lr.locked)
+                row.append(lr.unlocked)
+                scores.append(qr.score)
+            row = [proj.student.firstname, sum(map(float, scores))] + row
             line = ','.join(map(str, row))
             print(line)
             file.write(line + '\n')
@@ -65,7 +79,7 @@ def run_ok(csvfile: str, projects: Iterable[OkProj]):
 
 
 def print_doctest_to_csv(csvfile: str, projects: Iterable[OkProj]):
-    with open(csvfile, 'w') as file:
+    with open(csvfile, 'w', encoding='utf-8') as file:
         for proj in projects:
             try:
                 fail, all = proj.run_doctest()
