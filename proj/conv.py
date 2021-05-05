@@ -1,3 +1,5 @@
+import os
+import pathlib
 import subprocess
 import typing
 from typing import Iterable
@@ -66,7 +68,7 @@ def run_ok(csvfile: str, projects: Iterable[OkProj], qs: list[str]):
                     row.append('')
                     row.append('')
                     row.append('')
-                    qr = 0
+                    qr = proj.RunOkQResults('', 0, 0, 0, '')
                 lr = proj.count_locked_q(q)
                 row.append(lr.locked)
                 row.append(lr.unlocked)
@@ -89,6 +91,16 @@ def print_doctest_to_csv(csvfile: str, projects: Iterable[OkProj]):
                 print(f"{proj.student.firstname},IndentationError,IndentationError")
                 file.write(f"{proj.student.firstname},IndentationError,IndentationError\n")
             file.flush()
+
+
+def remove_project_dir(projects: Iterable[OkProj]):
+    for project in projects:
+        subprocess.run(['wsl', 'rm', '-rf', project.proj_root.as_posix()], check=True)
+
+
+def call_cloneclassroom(*args: str):
+    os.chdir('assets/submissions')
+    subprocess.run(['py', 'cloneclassroom', *args], check=True)
 
 # reusable
 #

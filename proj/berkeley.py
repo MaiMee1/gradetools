@@ -71,7 +71,7 @@ class OkProj:
         subprocess.run(['wsl', 'mv', (self.cache_dir / original).as_posix(), (self.proj_root / original).as_posix()], check=True)
 
     @dataclasses.dataclass()
-    class LockedResults:
+    class CountLockedQResults:
         locked: int
         unlocked: int
 
@@ -81,7 +81,7 @@ class OkProj:
             raise FileNotFoundError(f"Cannot find '{file}' for student '{self.student.firstname}'")
         with file.open('r') as f:
             contents = f.read()
-            return self.LockedResults(
+            return self.CountLockedQResults(
                 locked=contents.count("'locked': True"),
                 unlocked=contents.count("'locked': False"),
             )
@@ -108,21 +108,21 @@ class OkProj:
     re5 = re.compile(r' {4}Total: (\d+.\d+)')  # 1 = total score
 
     @dataclasses.dataclass()
-    class OkResults:
+    class RunOkQResults:
         question: str
         passed: int
         failed: int
         fullscore: int
         score: str
 
-    def run_ok_q(self, q: str) -> OkResults:
+    def run_ok_q(self, q: str) -> RunOkQResults:
         self.chdir()
         scp = subprocess.run(['py', 'ok', '-q', q, '--score', '--local'], capture_output=True)
         out = scp.stdout.decode().replace('\r\n', '\n')
         m = self.re2.search(out)
         m2 = self.re4.search(out)
         try:
-            return self.OkResults(
+            return self.RunOkQResults(
             question=m.group(1),
             passed = int(m.group(2)),
             failed = int(m.group(3)),
