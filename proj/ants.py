@@ -6,7 +6,7 @@ from .berkeley import OkProj
 
 
 class AntsProj(OkProj):
-    unlocked_tests = pathlib.Path('assets/ants/tests')
+    _unlocked_tests = pathlib.Path('assets/ants/tests')
 
     def __init__(self, student: utils.models.Student):
         super(AntsProj, self).__init__(student)
@@ -17,6 +17,12 @@ class AntsProj(OkProj):
         if not path.exists():
             raise FileNotFoundError(f"project root for {self.student.firstname} not found")
         return path
+
+    # def get_proj_xx_ok(self) -> pathlib.Path:
+    #     path = utils.BASE_DIR / self.proj_root / 'proj03.ok'
+    #     if not path.exists():
+    #         raise FileNotFoundError(f"cannot find 'proj03.ok' in student {self.student.firstname}")
+    #     return path
 
     @property
     def ants_py(self) -> pathlib.Path:

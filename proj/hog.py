@@ -6,7 +6,7 @@ from .berkeley import OkProj
 
 
 class HogProj(OkProj):
-    unlocked_tests = pathlib.Path('assets/hog/tests')
+    _unlocked_tests = pathlib.Path('assets/hog/tests')
 
     def __init__(self, student: utils.models.Student):
         super(HogProj, self).__init__(student)

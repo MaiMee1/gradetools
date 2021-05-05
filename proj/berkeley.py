@@ -2,7 +2,6 @@ import abc
 import dataclasses
 import doctest
 import importlib
-import io
 import os
 import pathlib
 import pickle
@@ -15,7 +14,7 @@ import utils
 
 
 class OkProj:
-    unlocked_tests = pathlib.Path('')
+    _unlocked_tests = pathlib.Path('')
 
     def __init__(self, student: utils.models.Student):
         self.student = student
@@ -23,27 +22,53 @@ class OkProj:
         self.ok_history: typing.Optional[dict] = None
 
         self.tests_dir = self.proj_root / 'tests'
-        self.original_tests = self.proj_root / '~original-tests'
+        self._cache_dir = self.proj_root / '.original'
+
+    @property
+    def cache_dir(self) -> pathlib.Path:
+        """ Relative to utils.BASE_DIR """
+        if not self._cache_dir.exists():
+            self._cache_dir.mkdir()
+        assert self._cache_dir.exists()
+        return self._cache_dir
 
     @abc.abstractmethod
     def get_proj_root(self) -> pathlib.Path:
         # absolute PATH
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def get_proj_xx_ok(self) -> pathlib.Path:
+        raise NotImplementedError
+
     def unlock_tests(self):
-        os.chdir(utils.BASE_DIR)
-        if self.original_tests.exists():
-            raise ValueError("Already unlocked!")
-        subprocess.run(['wsl', 'mv', self.tests_dir.as_posix(), self.original_tests.as_posix()], check=True)
-        subprocess.run(['wsl', 'cp', '-r', self.__class__.unlocked_tests.as_posix(), self.tests_dir.as_posix()],
-                       check=True)
+        self.replace_original(self.tests_dir.relative_to(self.proj_root), self._unlocked_tests)
 
     def restore_tests(self):
-        os.chdir(utils.BASE_DIR)
-        if not self.original_tests.exists():
-            raise ValueError("Can't find original tests")
-        subprocess.run(['wsl', 'rm', '-rf', self.tests_dir.as_posix()], check=True)
-        subprocess.run(['wsl', 'mv', self.original_tests.as_posix(), self.tests_dir.as_posix()], check=True)
+        self.restore_original(self.tests_dir.relative_to(self.proj_root))
+
+    def replace_original(self, original: str, replacement: pathlib.Path):
+        """Replace original file at path
+
+        :param original: file path relative to self.proj_root
+        :param replacement: relative to utils.BASE_DIR
+        """
+        os.chdir(utils.BASE_DIR)  # wsl can't do absolute WindowsPath
+        if (self.cache_dir / original).exists():
+            raise ValueError("Already replaced!")
+        subprocess.run(['wsl', 'mv', (self.proj_root / original).as_posix(), (self.cache_dir / original).as_posix()], check=True)
+        subprocess.run(['wsl', 'cp', '-r', replacement.as_posix(), (self.proj_root / original).as_posix()], check=True)
+
+    def restore_original(self, original: str):
+        """Replace original file at path
+
+        :param original: relative to self.proj_root
+        """
+        os.chdir(utils.BASE_DIR)  # To make it the same as above (parallelism)
+        if not (self.cache_dir / original).exists():
+            raise ValueError(f"Can't find cached original file '{self.cache_dir / original}' from '{self.cache_dir / original}'")
+        subprocess.run(['wsl', 'rm', '-rf', (self.proj_root / original).as_posix()], check=True)
+        subprocess.run(['wsl', 'mv', (self.cache_dir / original).as_posix(), (self.proj_root / original).as_posix()], check=True)
 
     @dataclasses.dataclass()
     class LockedResults:
